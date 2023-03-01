@@ -104,7 +104,8 @@ namespace Isis {
    * @history 2008-01-14 Janet Barrett - Imported into Isis3. Changed name from pht_hapke to PhotoModelAlgorithm()
    * @history 2008-11-05 Jeannie Walldren - Added documentation
    *          from Isis2 files. Replaced Isis::PI with PI since this is in Isis namespace.
-   *
+   * @history 2023-03-01 Tim Clark - Implement improved Hapke model referenced in Hakpe, Bruce (2012), 
+   *                     Theory of Reflectance and Emittance Spectroscopy (2nd Ed.), Cambridge Univ. Press.
    */
   double Hapke::PhotoModelAlgorithm(double phase, double incidence,
                                        double emission) {
@@ -121,7 +122,8 @@ namespace Isis {
     double hgs;
     double cosg;
     double tang2;
-    double bg;
+    double bcg;
+    double bsg;
     double pg;
     double pg1;
     double pg2;
@@ -198,10 +200,10 @@ namespace Isis {
     tang2 = tan(pharad/2.0);
 
     if(p_photoHh == 0.0) {
-      bg = 0.0;
+      bsg = 0.0;
     }
     else {
-      bg = p_photoB0 / (1.0 + tang2 / p_photoHh);
+      bsg = p_photoB0 / (1.0 + tang2 / p_photoHh);
     }
 
     if (p_algName == "HAPKEHEN") {
@@ -216,11 +218,20 @@ namespace Isis {
 
     // If smooth Hapke is wanted then set Theta<=0.0
     if(p_photoTheta <= 0.0) {
-      pht_hapke = p_photoWh / 4.0 * munot / (munot + mu) * ((1.0 + bg) *
-                     pg - 1.0 + Hfunc(munot, gamma) * Hfunc(mu, gamma));
+          //TODO: add variable to determine old or new Hapke model model
+    if(oldModel){
+      pht_hapke = p_photoWh / 4.0 * munot / (munot + mu) * ((1.0 + bsg) *
+                    pg - 1.0 + Hfunc(munot, gamma) * Hfunc(mu, gamma));
       return pht_hapke;
+    }else{
+      /**
+      * 2012 Hapke model published in Hakpe, Bruce (2012), Theory of Reflectance and Emittance Spectroscopy (2nd Ed.), Cambridge Univ. Press.
+      *           I/F = (w/4) (u0/(u0 + u)) (1 + Bc0 Bc(g))  [(1 + Bs0 Bs(g)) p(g) + H(u0) H(u) -1]
+      */
+      pht_hapke = (p_photoWh / 4.0) * munot / (munot + mu) *(1.0 + bcg) *((1.0 + bsg) *
+                    pg - 1.0 + Hfunc(munot, gamma) * Hfunc(mu, gamma)
     }
-
+    }
     sini = sin(incrad);
     coti = munot / max(1.0e-10, sini);
     cot2i = coti * coti;
@@ -288,7 +299,7 @@ namespace Isis {
       up = p_photoOsr * (mu + sine * p_photoTant * (caz * ecoti + s2ee) / ecee);
     }
 
-    rr1 = p_photoWh / 4.0 * u0p / (u0p + up) * ((1.0 + bg) * pg -
+    rr1 = p_photoWh / 4.0 * u0p / (u0p + up) * ((1.0 + bsg) * pg -
           1.0 + Hfunc(u0p, gamma) * Hfunc(up, gamma));
     rr2 = up * munot / (up0 * u0p0 * p_photoSr * (1.0 - faz + faz * q));
     pht_hapke = rr1 * rr2;
