@@ -79,6 +79,9 @@ namespace Isis {
         return p_photoWh;
       };*/
 
+      void SetPhotoHc(const double hc);
+      //!Return photometric hc value
+
       void SetPhotoHh(const double hh);
       //! Return photometric Hh value
 /*      inline double PhotoHh() const {
@@ -90,6 +93,9 @@ namespace Isis {
 /*      inline double PhotoB0() const {
         return p_photoB0;
       };*/
+
+      void SetPhotoBc0(const double bc0);
+      //! Return photometric Bc(0) value
 
       void SetPhotoTheta(const double theta);
       //! Return photometric Theta value

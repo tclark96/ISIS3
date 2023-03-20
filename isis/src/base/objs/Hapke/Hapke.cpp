@@ -18,11 +18,12 @@ namespace Isis {
 
   Hapke::Hapke(Pvl &pvl) : PhotoModel(pvl) {
     p_photoHh = 0.0;
+    p_photoHc = 0.0;
     p_photoB0 = 0.0;
     p_photoTheta = 0.0;
     p_photoWh = 0.5;
     p_photoThetaold = -999.0;
-
+    p_photoBc0 = 0.0;
     p_photoHg1 = 0.0;
     p_photoHg2 = 0.0;
 
@@ -62,11 +63,19 @@ namespace Isis {
       SetPhotoHh(algorithm["Hh"]);
     }
 
+    if(algorithm.hasKeyword("Hc")){
+      SetPhotoHc(algorithm["Hc"])
+    }
+
     if(algorithm.hasKeyword("B0")) {
       SetPhotoB0(algorithm["B0"]);
     }
 
     p_photoB0save = p_photoB0;
+
+    if(algorithm.hasKeyword("Bc0")){
+      SetPhotoBc0(algorithm["Bc0"]);
+    }
 
     if(algorithm.hasKeyword("Theta")) {
       SetPhotoTheta(algorithm["Theta"]);
@@ -176,6 +185,20 @@ namespace Isis {
     munot = cos(incrad);
     mu = cos(emarad);
 
+
+  /*
+  * H(x) = {1 - w x [r0 + ((1 - 2 r0 x) / 2) ln((1 + x) / x)]}^(-1)
+  */
+  inline double HapkeFunc(double x, double w, double r0 ){
+    if (x == 0.0){
+      return 1.0;
+    }
+    x =abs(x);
+    double hxw = 1.0 - w * x * (r0 + ((1.0 - 2.0 * r0 * x) * 0.5 * log((1.0 + x) / x)));
+
+    return 1.0/hxw;
+  }
+
     if(p_photoTheta != p_photoThetaold) {
       cost = cos(p_photoTheta * PI / 180.0);
       sint = sin(p_photoTheta * PI / 180.0);
@@ -206,6 +229,16 @@ namespace Isis {
       bsg = p_photoB0 / (1.0 + tang2 / p_photoHh);
     }
 
+
+    if (pharad ==0.0){
+      bcg =1.0 
+
+    }else if (pharad != PI && p_photoHc != 0.0){
+      double tang2hc = tang2 / p_photoHc;
+      bcg = (1 + ((1 - exp(-tang2hc)) / tang2hc)) / (2 * (1 + tang2hc) * (1 + tang2hc));
+    }
+
+
     if (p_algName == "HAPKEHEN") {
       pg1 = (1.0 - p_photoHg2) * (1.0 - hgs) / pow((1.0 + hgs + 2.0 *
             p_photoHg1 * cosg), 1.5);
@@ -228,8 +261,11 @@ namespace Isis {
       * 2012 Hapke model published in Hakpe, Bruce (2012), Theory of Reflectance and Emittance Spectroscopy (2nd Ed.), Cambridge Univ. Press.
       *           I/F = (w/4) (u0/(u0 + u)) (1 + Bc0 Bc(g))  [(1 + Bs0 Bs(g)) p(g) + H(u0) H(u) -1]
       */
+
+      double r0 = (1.0- gamma)/ (1.0 + gamma);
       pht_hapke = (p_photoWh / 4.0) * munot / (munot + mu) *(1.0 + bcg) *((1.0 + bsg) *
-                    pg - 1.0 + Hfunc(munot, gamma) * Hfunc(mu, gamma)
+                    pg + (HapkeFunc(munot, p_photoWh, r0) * HapkeFunc(mu, p_photoWh, r0)-1.0));
+      return pht_hapke;
     }
     }
     sini = sin(incrad);
@@ -298,13 +334,26 @@ namespace Isis {
       u0p = p_photoOsr * (munot + sini * p_photoTant * (ecoti - s2ee) / ecee);
       up = p_photoOsr * (mu + sine * p_photoTant * (caz * ecoti + s2ee) / ecee);
     }
+    if(oldModel){
 
-    rr1 = p_photoWh / 4.0 * u0p / (u0p + up) * ((1.0 + bsg) * pg -
-          1.0 + Hfunc(u0p, gamma) * Hfunc(up, gamma));
-    rr2 = up * munot / (up0 * u0p0 * p_photoSr * (1.0 - faz + faz * q));
-    pht_hapke = rr1 * rr2;
+      rr1 = p_photoWh / 4.0 * u0p / (u0p + up) * ((1.0 + bsg) * pg -
+            1.0 + Hfunc(u0p, gamma) * Hfunc(up, gamma));
+      rr2 = up * munot / (up0 * u0p0 * p_photoSr * (1.0 - faz + faz * q));
+      pht_hapke = rr1 * rr2;
 
     return pht_hapke;
+    }else{
+      /**
+      * 2012 Hapke model published in Hakpe, Bruce (2012), Theory of Reflectance and Emittance Spectroscopy (2nd Ed.), Cambridge Univ. Press.
+      *           I/F = (w/4) (u0/(u0 + u)) (1 + Bc0 Bc(g))  [(1 + Bs0 Bs(g)) p(g) + H(u0) H(u) -1]
+      */
+      double r0 = (1.0 - gamma)/ (1.0 + gamma);
+      
+      pht_hapke = (p_photoWh / 4.0) * u0p / (u0p + up) *(1.0 + bcg) *((1.0 + bsg) *
+                    pg + (HapkeFunc(munot, p_photoWh, r0) * HapkeFunc(mu, p_photoWh, r0)-1.0));
+
+      return pht_hapke;              
+    }
   }
 
   /**
@@ -391,6 +440,14 @@ namespace Isis {
     p_photoWh = wh;
   }
 
+
+void Hapke::SetPhotoHc(const double hc) {
+    if (hc < 0.0 ){
+      string msg = "Invalid value of Hapke hc [" +
+                   IString(hc) + "]";
+    }
+    p_photoHc = hc;
+}
   /**
     * Set the Hapke opposition surge component. This is one of
     * two opposition surge components needed for the Hapke model.
@@ -423,6 +480,14 @@ namespace Isis {
     p_photoB0 = b0;
   }
 
+  void Hapke::SetPhotoBc0(const double bc0){
+    if(bc0 < 0.0){
+      string msg = "Invalid value of Hapke bc0 [" +
+                    IString(bc0) + "]";
+      throw IException(IException::User,msg, _FILEINFO_);
+    }
+    p_photoBc0 = bc0;
+  }
 
   /**
     * Determine if the Hapke opposition surge component is initialized
