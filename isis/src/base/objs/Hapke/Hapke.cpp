@@ -239,7 +239,7 @@ namespace Isis {
     }
 
 
-    if (p_algName == "HAPKEHEN" || p_algName == "HAPKEBRUCE") {
+    if (p_algName == "HAPKEHEN" || p_algName == "HAPKE2012") {
       pg1 = (1.0 - p_photoHg2) * (1.0 - hgs) / pow((1.0 + hgs + 2.0 *
             p_photoHg1 * cosg), 1.5);
       pg2 = p_photoHg2 * (1.0 - hgs) / pow((1.0 + hgs - 2.0 *
@@ -251,7 +251,7 @@ namespace Isis {
 
     // If smooth Hapke is wanted then set Theta<=0.0
     if(p_photoTheta <= 0.0) {
-    if(p_algName != "HAPKEBRUCE" ){
+    if(p_algName != "HAPKE2012" ){
       pht_hapke = p_photoWh / 4.0 * munot / (munot + mu) * ((1.0 + bsg) *
                     pg - 1.0 + Hfunc(munot, gamma) * Hfunc(mu, gamma));
       return pht_hapke;
@@ -333,7 +333,7 @@ namespace Isis {
       u0p = p_photoOsr * (munot + sini * p_photoTant * (ecoti - s2ee) / ecee);
       up = p_photoOsr * (mu + sine * p_photoTant * (caz * ecoti + s2ee) / ecee);
     }
-    if(p_algName != "HAPKEBRUCE" ){
+    if(p_algName != "HAPKE2012" ){
 
       rr1 = p_photoWh / 4.0 * u0p / (u0p + up) * ((1.0 + bsg) * pg -
             1.0 + Hfunc(u0p, gamma) * Hfunc(up, gamma));

@@ -142,7 +142,7 @@ void LoadPvl() {
         ui.Clear("KLIST");
         ui.Clear("LLIST");
         ui.Clear("PHASECURVELIST");
-        if (phtVal == "HAPKEHEN" || phtVal == "HAPKELEG") {
+        if (phtVal == "HAPKEHEN" || phtVal == "HAPKELEG" || phtVal == "HAPKE2012") {
           if (phtGrp->hasKeyword("THETA")) {
             double theta = phtGrp->findKeyword("THETA");
             os.str("");
@@ -180,7 +180,7 @@ void LoadPvl() {
               throw IException(IException::User, message, _FILEINFO_);
             }
           }
-          if (phtVal == "HAPKEHEN") {
+          if (phtVal == "HAPKEHEN" || phtVal= "HAPKE2012") {
             if (phtGrp->hasKeyword("HG1")) {
               double hg1 = phtGrp->findKeyword("HG1");
               os.str("");
@@ -206,6 +206,20 @@ void LoadPvl() {
               os.str("");
               os << ch;
               ui.PutAsString("CH", os.str().c_str());
+            }
+          }
+          if (phtVal =="HAPKE2012"){
+            if (phtGrp->hasKeyword("HC")) {
+              double bh = phtGrp->findKeyword("HC");
+              os.str("");
+              os << bh;
+              ui.PutAsString("HC", os.str().c_str());
+            }
+            if (phtGrp->hasKeyword("BC0")) {
+              double ch = phtGrp->findKeyword("BC0");
+              os.str("");
+              os << ch;
+              ui.PutAsString("BC0", os.str().c_str());
             }
           }
         } else if (phtVal == "LUNARLAMBERTEMPIRICAL" || phtVal == "MINNAERTEMPIRICAL") {
@@ -1459,7 +1473,7 @@ void IsisMain() {
   }
   phtLog += PvlKeyword("PHTNAME", phtName);
 
-  if (phtName == "HAPKEHEN" || phtName == "HAPKELEG") {
+  if (phtName == "HAPKEHEN" || phtName == "HAPKELEG" || phtVal == "HAPKE2012") {
     if (parMap.contains("THETA")) {
       toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
                addKeyword(PvlKeyword("THETA",toString(toDouble(parMap["THETA"]))),Pvl::Replace);
@@ -1562,7 +1576,7 @@ void IsisMain() {
       throw IException(IException::User, message, _FILEINFO_);
     }
     phtLog += toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").findKeyword("ZEROB0STANDARD");
-    if (phtName == "HAPKEHEN") {
+    if (phtName == "HAPKEHEN" || phtName == "HAPKE2012") {
       if (parMap.contains("HG1")) {
         toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
                  addKeyword(PvlKeyword("HG1",toString(toDouble(parMap["HG1"]))),Pvl::Replace);
@@ -1628,6 +1642,40 @@ void IsisMain() {
                       hasKeyword("CH")) {
           QString message = "The " + phtName + " Photometric model requires a value for the CH parameter.";
           message += "The normal range for CH is: -1 <= CH <= 1";
+          throw IException(IException::User, message, _FILEINFO_);
+        }
+      }
+      phtLog += toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").findKeyword("CH");
+    }
+    if(phtName =="HAPKE2012"){
+      if (parMap.contains("HC")) {
+        toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
+                 addKeyword(PvlKeyword("HC",toString(toDouble(parMap["HC"]))),Pvl::Replace);
+      } else if (ui.WasEntered("HC")) {
+        QString keyval = ui.GetString("HC");
+        double ch = toDouble(keyval);
+        toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
+                 addKeyword(PvlKeyword("HC",toString(ch)),Pvl::Replace);
+      } else {
+        if (!toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
+                      hasKeyword("HC")) {
+          QString message = "The " + phtName + " Photometric model requires a value for the HC parameter.";
+          throw IException(IException::User, message, _FILEINFO_);
+        }
+      }
+      phtLog += toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").findKeyword("HC");
+    if (parMap.contains("BC0")) {
+        toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
+                 addKeyword(PvlKeyword("BC0",toString(toDouble(parMap["BC0"]))),Pvl::Replace);
+      } else if (ui.WasEntered("BC0")) {
+        QString keyval = ui.GetString("BC0");
+        double ch = toDouble(keyval);
+        toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
+                 addKeyword(PvlKeyword("BC0",toString(ch)),Pvl::Replace);
+      } else {
+        if (!toPhtPvl.findObject("PhotometricModel").findGroup("Algorithm").
+                      hasKeyword("BC0")) {
+          QString message = "The " + phtName + " Photometric model requires a value for the BC0 parameter.";
           throw IException(IException::User, message, _FILEINFO_);
         }
       }

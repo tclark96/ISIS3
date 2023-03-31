@@ -1493,6 +1493,11 @@ incidence</def> and <def link="Emission Angle">emission angles</def>, respective
               and ch, plus single scattering albedo wh, opposition surge parameters
               hh and b0, and macroscopic roughness theta.
           </dd>
+          <dt><b>HAPKE2012</b></dt>
+          <dd>
+              2012 revised Hapke model with single-particle phase function and accounts
+              for both Coherent backscatter opposition effect and Shadowhiding opposition effect
+          </dd>
           <dt><b>LOMMELSEELIGER</b></dt>
           <dd>
               This model takes into account the <def>radiance</def> that results from
@@ -1628,6 +1633,35 @@ incidence</def> and <def link="Emission Angle">emission angles</def>, respective
             <exclusions>
               <item>HG1</item>
               <item>HG2</item>
+              <item>L</item>
+              <item>K</item>
+              <item>PHASELIST</item>
+              <item>KLIST</item>
+              <item>LLIST</item>
+              <item>PHASECURVELIST</item>
+            </exclusions>
+          </option>
+                    <option value="HAPKE2012">
+            <brief>
+              Hapke 2012 Photometric Model
+            </brief>
+            <description>
+              2012 Hapke model with CBOE and SHOE
+            </description>
+            <inclusions>
+              <item>THETA</item>
+              <item>WH</item>
+              <item>HG1</item>
+              <item>HG2</item>
+              <item>HH</item>
+              <item>HC</item>
+              <item>B0</item>
+              <item>BC0</item>
+              <item>ZEROB0STANDARD</item>
+            </inclusions>
+            <exclusions>
+              <item>BH</item>
+              <item>CH</item>
               <item>L</item>
               <item>K</item>
               <item>PHASELIST</item>
@@ -1933,6 +1967,19 @@ incidence</def> and <def link="Emission Angle">emission angles</def>, respective
         </description>
         <minimum inclusive="yes">0.0</minimum>
       </parameter>
+      
+      <parameter name="HC">
+        <type>string</type>
+        <brief>
+          Hapke opposition surge
+        </brief>
+        <default><item>None Specified</item></default>
+        <internalDefault>None Specified</internalDefault>
+        <description>
+          Coherent Backscatter opposition surge component  See Hapke (2012).
+        </description>
+        <minimum inclusive="yes">0.0</minimum>
+      </parameter>
 
       <parameter name="B0">
         <type>string</type>
@@ -1944,6 +1991,19 @@ incidence</def> and <def link="Emission Angle">emission angles</def>, respective
         <description>
           The Hapke opposition surge component.  The magnitude of the opposition
           effect for the surface if Hapkehen or Hapkeleg is used.  See Hapke (1984).
+        </description>
+        <minimum inclusive="yes">0.0</minimum>
+      </parameter>
+    
+      <parameter name="BC0">
+        <type>string</type>
+        <brief>
+          Hapke opposition surge
+        </brief>
+        <default><item>None Specified</item></default>
+        <internalDefault>None Specified</internalDefault>
+        <description>
+          Coherent Backscatter opposition surge component  See Hapke (2012).
         </description>
         <minimum inclusive="yes">0.0</minimum>
       </parameter>
